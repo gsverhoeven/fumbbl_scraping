@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-def transform_match_data(df_matches, api_change = 258150):
+def transform_match_data(df_matches):
 
     # convert object dtype columns to proper pandas dtypes datetime and numeric
     df_matches['match_date'] = pd.to_datetime(df_matches.match_date) # Datetime object
@@ -28,11 +28,13 @@ def transform_match_data(df_matches, api_change = 258150):
     df_matches.loc[mask, 'team2_value'] = df_matches.loc[mask, 'team2_value'].astype(str) + 'k'
 
     # convert team value 1100k to 1100 integer
-    df_matches['team1_value'] = df_matches['team1_value'].str.replace('k$', '')
-    df_matches['team1_value'] = df_matches['team1_value'].fillna(0).astype(np.int64)
+    df_matches['team1_value'] = df_matches['team1_value'].astype(str) 
+    df_matches['team1_value'] = df_matches['team1_value'].replace('k$', '', regex = True) 
+    df_matches['team1_value'] = df_matches['team1_value'].fillna(value = 0).astype(np.int64)
 
-    df_matches['team2_value'] = df_matches['team2_value'].str.replace('k$', '')
-    df_matches['team2_value'] = df_matches['team2_value'].fillna(0).astype(np.int64)
+    df_matches['team2_value'] = df_matches['team2_value'].astype(str)
+    df_matches['team2_value'] = df_matches['team2_value'].replace('k$', '', regex = True)
+    df_matches['team2_value'] = df_matches['team2_value'].fillna(value = 0).astype(np.int64)
     
 
     df_matches['tv_diff'] = np.abs(df_matches['team2_value'] - df_matches['team1_value'])
