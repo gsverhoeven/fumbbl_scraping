@@ -71,11 +71,11 @@ def get_team_roster(team_id, df_skills, df_matches, inducements):
             new_row['position'] = inducement
             new_row['player_id'] = 99999999
             new_row['number'] = 99
-            new_row['skill_id'] = np.NaN
+            new_row['skill_id'] = np.nan
             new_row['name'] = np.nan
-            df_roster = df_roster.append(new_row)
+            df_roster = pd.concat([df_roster, new_row]) # AttributeError: ‘DataFrame’ object has no attribute ‘append’ is an error that occurs when the append() method is used in Pandas versions 2.0 and beyond
 
-    df_roster = df_roster.fillna('')
+    df_roster = df_roster.infer_objects(copy=False).fillna('')
 
     # Next we add the coach name
     if (df_matches.query('match_id == @match_id')['team1_id'].values[0] == team_id):
