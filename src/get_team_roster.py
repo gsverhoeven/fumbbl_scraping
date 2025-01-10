@@ -26,12 +26,14 @@ def get_team_roster(team_id, df_skills, df_matches, inducements):
     with gzip.open(fname_string_gz, mode = "rb") as f:
         team_skill_obj = json.load(f)
 
-    df_roster = pd.json_normalize(team_obj, 'players', ['rerolls', 'assistantCoaches', 'cheerleaders', 'apothecary', ['roster', 'name']])
+    team_obj['team_name'] = team_obj.pop('name')
+    df_roster = pd.json_normalize(data = team_obj, record_path = 'players', 
+    meta = ['team_name' , 'rerolls', 'assistantCoaches', 'cheerleaders', 'apothecary', ['roster', 'name']])
 
     df_roster.rename({'id' : 'player_id'}, axis = 1, inplace = True)
 
-    df_roster = df_roster.loc[:, ['player_id', 'number', 'position', 'rerolls', 'assistantCoaches', 'cheerleaders', 'apothecary', 'roster.name']]
-
+    df_roster = df_roster.loc[:, ['player_id', 'number', 'position', 'rerolls', 'assistantCoaches', 'cheerleaders', 'apothecary', 'roster.name', 'team_name']]
+  
     df_roster['team_id'] = team_id
 
     # Next we extract the player skill info into a nice pd dataFrame:
