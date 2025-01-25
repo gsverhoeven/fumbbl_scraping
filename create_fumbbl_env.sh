@@ -9,3 +9,5 @@ pip install isoweek
 pip install lxml
 pip install faust-cchardet
 pip install tables
+pip install selenium
+pip install webdriver-manager
