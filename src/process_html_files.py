@@ -125,5 +125,7 @@ def process_html_files(begin_match = None, end_match = None, target = None, verb
     'coach1_ranking', 'coach2_ranking', 'team1_comp', 'team2_comp',
     'team1_pass', 'team2_pass', 'team1_rush', 'team2_rush',
     'team1_block', 'team2_block', 'team1_foul', 'team2_foul'])
+    # write data as hdf5 file
+    df_matches_html_.to_hdf(target, key='df_matches_html', mode='w')
 
     return df_matches_html_
