@@ -11,6 +11,9 @@ def get_team_roster(team_id, df_skills, df_matches, inducements):
 
     # Need a combi of Team and Match to get the inducements for the roster: use most recent match
     match_id = df_matches.query('team1_id == @team_id or team2_id == @team_id')['match_id'].max()
+    # need tournament id for team (SL)
+    tournament_id = df_matches.query('team1_id == @team_id or team2_id == @team_id')['tournament_id'].max()
+    tournament_name = df_matches.query('team1_id == @team_id or team2_id == @team_id')['tournament_name'].max()
 
     dirname = "raw/team_files/" + str(team_id)[0:4]
 
@@ -88,6 +91,8 @@ def get_team_roster(team_id, df_skills, df_matches, inducements):
         coach_name = 'unknown'
 
     df_roster['coach_name'] = coach_name
+    df_roster['tournament_id'] = tournament_id
+    df_roster['tournament_name'] = tournament_name
     #df_roster = df_roster.drop(df_roster[df_roster.position == ''].index)
     #df_roster['skill_id'] = df_roster['skill_id'].replace(-1, None)
 
