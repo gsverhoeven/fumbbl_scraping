@@ -11,6 +11,7 @@ library(tidyverse)
 
 ```{r}
 data("df_rosters")
+df_rosters <- add_roster_metadata(df_rosters)
 ```
 
 ```{r}
@@ -19,10 +20,11 @@ eb25 <- read.csv("Coach List_Full Data_data.csv")
 eb25 <- eb25 %>%
   select(Description, Race, Team, NAF.name, Tournament, Skill)
 
-colnames(eb25) <- c("position", "race_name", "team_id", "coach_name", "group_name", "skill_name")
+colnames(eb25) <- c("position", "roster.name", "team_id", "coach_name", "group_name", "skill_name")
 
 eb25 <- eb25 %>%
   mutate(cnt = ifelse(stringr::str_detect(skill_name , "^[:digit:]+$"), as.integer(skill_name), 1)) %>%
+  mutate(player_id = row_number()) %>%
   mutate(team_id = as.integer(as.factor(paste0(team_id, coach_name)))) %>%
   group_by(team_id) %>%
   mutate(number = row_number()) %>%
@@ -32,11 +34,12 @@ eb25 <- eb25 %>%
   mutate(skill_name = stringr::str_replace(skill_name, " \\s*\\([^\\)]+\\)", "")) %>%
   mutate(skill_name = stringr::str_replace(skill_name, '\\*', '')) %>%
   mutate(skill_name = stringr::str_replace(skill_name, '\\,', '')) %>%
-  mutate(skill_name = stringr::str_replace_all(skill_name, fixed(" "), ""))
+  mutate(skill_name = stringr::str_replace_all(skill_name, fixed(" "), "")) %>%
+  mutate(skill_name = if_else(skill_name == "Sidestep", "SideStep", skill_name))
   
   
 roster_cost <- eb25 %>%
-  group_by(position, race_name) %>%
+  group_by(position, roster.name) %>%
   summarise(cnt = n())
 
 
@@ -44,9 +47,9 @@ roster_cost <- eb25 %>%
 
 ```{r}
 library(readr)
-ref_bb_rosters_cost <- read_delim("../inst/extdata/ref_bb_rosters_cost.csv", 
+ref_bb_rosters_cost <- read_delim(system.file("extdata", "ref_bb_rosters_cost.csv", package = "bbrosterplots"), 
     delim = ";", escape_double = FALSE, trim_ws = TRUE)
-View(ref_bb_rosters_cost)
+#View(ref_bb_rosters_cost)
 ```
 
 # Skill names
@@ -59,15 +62,40 @@ skill_colors <- eb25 %>%
   summarise(cnt = n())
 
 library(readr)
-ref_bb_skill_colors <- read_delim("../inst/extdata/ref_bb_skill_colors.csv", 
+ref_bb_skill_colors <- read_delim(system.file("extdata", "ref_bb_skill_colors.csv", package = "bbrosterplots"), 
     delim = ";", escape_double = FALSE, trim_ws = TRUE)
 
 ref_bb_skill_colors <- ref_bb_skill_colors %>%
   mutate(skill_name = stringr::str_replace_all(skill_name, fixed(" "), ""))
 #View(ref_bb_skill_colors)
+
+#write.csv2(skill_colors[!skill_colors$skill_name %in% ref_bb_skill_colors$skill_name,], "skill_colors.csv")
 ```
+
+```{r}
+eb25 <- eb25 %>%
+  mutate(skill_name = if_else(skill_name == "", NA, skill_name))
+eb25 <- eb25 %>%
+  left_join(ref_bb_skill_colors %>% select(skill_name, color), by = "skill_name")
+
+eb25$sort_order <- 1
+eb25$cost <- NA
+
+
+```
+
+
+```{r}
+create_rosterplot(eb25, group_name = "EB25", tournament_ruleset = "EB25")
+```
+
+```{r}
+render_rosterbook(params = list(group_name = "EB25", tournament_ruleset = "EB25", perc = FALSE, team = FALSE))
+```
+
 
 # New feature ideas
 
 # add simple sort order, and skip clustering, cost and sort_order can already be NA
 # what does number do? and number 99?
+# create rosterplots() or make it single roster, inc for loop in notebook

@@ -19,3 +19,7 @@ datasets/v0.5/v0.5_fumbbl_data_h5.zip
 raw/*
 current_screen.png
 .Rproj.user
+/prepare_roster_data/EB25
+prepare_roster_data/roster_book.Rmd
+prepare_roster_data/skill_colors.csv
+skill_colors.csv
