@@ -9,10 +9,13 @@ library(bbrosterplots)
 library(tidyverse)
 ```
 
+# load example data
 ```{r}
 data("df_rosters")
 df_rosters <- add_roster_metadata(df_rosters)
 ```
+
+# load EB25 dump from Tableau
 
 ```{r}
 eb25 <- read.csv("Coach List_Full Data_data.csv")
@@ -35,8 +38,8 @@ eb25 <- eb25 %>%
   mutate(skill_name = stringr::str_replace(skill_name, '\\*', '')) %>%
   mutate(skill_name = stringr::str_replace(skill_name, '\\,', '')) %>%
   mutate(skill_name = stringr::str_replace_all(skill_name, fixed(" "), "")) %>%
-  mutate(skill_name = if_else(skill_name == "Sidestep", "SideStep", skill_name))
-  
+  mutate(skill_name = if_else(skill_name == "Sidestep", "SideStep", skill_name)) #%>%
+  #mutate(skill_name = if_else(skill_name == "", NA, skill_name))  
   
 roster_cost <- eb25 %>%
   group_by(position, roster.name) %>%
@@ -44,6 +47,8 @@ roster_cost <- eb25 %>%
 
 
 ```
+
+# Roster cost
 
 ```{r}
 library(readr)
@@ -54,43 +59,39 @@ ref_bb_rosters_cost <- read_delim(system.file("extdata", "ref_bb_rosters_cost.cs
 
 # Skill names
 
-Probleem met skill stacking : BlockDodge en DodgeBlock
-
 ```{r}
 skill_colors <- eb25 %>%
   group_by(skill_name) %>%
   summarise(cnt = n())
-
-library(readr)
-ref_bb_skill_colors <- read_delim(system.file("extdata", "ref_bb_skill_colors.csv", package = "bbrosterplots"), 
-    delim = ";", escape_double = FALSE, trim_ws = TRUE)
-
-ref_bb_skill_colors <- ref_bb_skill_colors %>%
-  mutate(skill_name = stringr::str_replace_all(skill_name, fixed(" "), ""))
-#View(ref_bb_skill_colors)
-
-#write.csv2(skill_colors[!skill_colors$skill_name %in% ref_bb_skill_colors$skill_name,], "skill_colors.csv")
-```
-
-```{r}
-eb25 <- eb25 %>%
-  mutate(skill_name = if_else(skill_name == "", NA, skill_name))
-eb25 <- eb25 %>%
-  left_join(ref_bb_skill_colors %>% select(skill_name, color), by = "skill_name")
-
-eb25$sort_order <- 1
-eb25$cost <- NA
-
-
 ```
 
 
 ```{r}
-create_rosterplot(eb25, group_name = "EB25", tournament_ruleset = "EB25")
+eb25 <- add_roster_metadata(eb25)
+```
+
+
+```{r}
+create_rosterplot(eb25 %>% filter(group_name == "Europen"), group_name = "EB25_europen", tournament_ruleset = "EB25_europen")
 ```
 
 ```{r}
-render_rosterbook(params = list(group_name = "EB25", tournament_ruleset = "EB25", perc = FALSE, team = FALSE))
+render_rosterbook(params = list(group_name = "EB25_eurobowl", 
+                                tournament_ruleset = "EB25_eurobowl", 
+                                cover_image = "EB25.jpg",
+                                scale_cover_perc = "100%",
+                                races = sort(eb25 %>% filter(group_name == "Eurobowl") %>% distinct(roster.name) %>% pull()),
+                                perc = FALSE, 
+                                team = FALSE), refresh_rmd = TRUE)
+```
+```{r}
+render_rosterbook(params = list(group_name = "EB25_europen", 
+                                tournament_ruleset = "EB25_europen", 
+                                cover_image = "EB25.jpg",
+                                scale_cover_perc = "100%",
+                                races = sort(eb25 %>% filter(group_name == "Europen") %>% distinct(roster.name) %>% pull()),
+                                perc = FALSE, 
+                                team = FALSE), refresh_rmd = TRUE)
 ```
 
 
