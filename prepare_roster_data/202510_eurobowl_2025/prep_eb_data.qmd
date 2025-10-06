@@ -83,6 +83,8 @@ render_rosterbook(params = list(group_name = "EB25_eurobowl",
                                 races = sort(eb25 %>% filter(group_name == "Eurobowl") %>% distinct(roster.name) %>% pull()),
                                 perc = FALSE, 
                                 team = FALSE), refresh_rmd = TRUE)
+
+# PM change output PDF filename 
 ```
 ```{r}
 render_rosterbook(params = list(group_name = "EB25_europen", 
