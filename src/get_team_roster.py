@@ -4,6 +4,8 @@ import numpy as np
 import plotnine as p9
 import requests
 import json
+import os
+import time
 
 def get_team_roster(team_id, df_skills, df_matches, inducements):
 
@@ -29,6 +31,7 @@ def get_team_roster(team_id, df_skills, df_matches, inducements):
     with gzip.open(fname_string_gz, mode = "rb") as f:
         team_skill_obj = json.load(f)
 
+    # convert json to pd
     team_obj['team_name'] = team_obj.pop('name')
     df_roster = pd.json_normalize(data = team_obj, record_path = 'players', 
     meta = ['team_name' , 'rerolls', 'assistantCoaches', 'cheerleaders', 'apothecary', ['roster', 'name']])
@@ -97,3 +100,60 @@ def get_team_roster(team_id, df_skills, df_matches, inducements):
     #df_roster['skill_id'] = df_roster['skill_id'].replace(-1, None)
 
     return df_roster
+
+def get_tourplay_roster(roster_id):
+    dirname = "tourplay/roster_files"
+
+    fname_string_gz = dirname + "/roster_" + str(roster_id) + ".json.gz"     
+
+    # read compressed json file
+    with gzip.open(fname_string_gz, mode = "rb") as f:
+        roster_obj = json.load(f)    
+    
+    return roster_obj
+
+def fetch_tourplay_roster(roster_id):
+    print(roster_id)
+    dirname = "tourplay/roster_files"
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
+
+    fname_string = dirname + "/roster_" + str(roster_id) + ".json.gz"
+
+    # check if file already exists, else scrape it
+    try:
+        f = open(fname_string, mode = "rb")
+
+    except OSError as e:
+        # file not present, scrape it         
+        api_string = "https://tourplay.net/api/rosters/" + str(roster_id)
+
+        referer = 'https://tourplay.net/en/blood-bowl/roster/' + str(roster_id)
+
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0',
+            'Accept': 'application/json, text/plain, */*', 
+            'Accept-Language': 'en',
+            'Accept-Encoding': 'gzip',
+            'Referer': referer,
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'Sec-Fetch-Dest': 'empty',
+            'Sec-Fetch-Mode': 'cors',
+            'Sec-Fetch-Site': 'same-origin',
+            'Connection': 'keep-alive'
+        }
+
+        response = requests.get(api_string, headers = headers)
+        response = response.json()
+
+        with gzip.open(fname_string, mode = "w") as f:
+            f.write(json.dumps(response).encode('utf-8'))  
+            print('x', end = '')
+            f.close()
+        time.sleep(0.3)
+    else:
+        # file already present
+        print("o", end = '')
+
+    return 0
