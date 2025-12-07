@@ -106,11 +106,62 @@ def get_tourplay_roster(roster_id):
 
     fname_string_gz = dirname + "/roster_" + str(roster_id) + ".json.gz"     
 
+    # check if file already exists, else scrape it
+    try:
+        f = open(fname_string_gz, mode = "rb")
+    except OSError as e:
+        # file not present, scrape it  
+        fetch_tourplay_roster(roster_id)
+        with gzip.open(fname_string_gz, mode = "rb") as f:
+            roster = json.load(f)            
+    else:
     # read compressed json file
-    with gzip.open(fname_string_gz, mode = "rb") as f:
-        roster_obj = json.load(f)    
-    
-    return roster_obj
+        with gzip.open(fname_string_gz, mode = "rb") as f:
+            roster = json.load(f)    
+    df_roster = pd.json_normalize(data = roster, record_path = 'lineUps')
+    df_roster = df_roster.loc[:, ['number', 'position', 'skills']]
+
+    skills = []
+    for i in range(len(df_roster)):
+        obj = df_roster.iloc[i]['skills']
+        sc = ""
+        for s in range(len(obj)):
+            if s == 0:
+                sc = sc + obj[s]['skillMaster']['name']
+            else:
+                sc = sc+ ', ' + obj[s]['skillMaster']['name']
+        skills.append(sc)
+
+    df_roster['skills'] = skills
+    df_roster['cnt'] = 1
+
+    non_player = {
+    'rerolls': roster['reRolls'],
+    'assistant_coaches': roster['assistantCoaches'],
+    'cheerleaders': roster['cheerLeaders'],
+    'dedicated_fans': roster['fanFactor'],
+}
+
+    for roster_element in non_player:
+        if not roster_element == ['']:
+            new_row = df_roster.iloc[[1]].copy()
+            new_row['number'] = 99
+            new_row['position'] = roster_element        
+            new_row['skills'] = ""
+            new_row['cnt'] = non_player[roster_element]
+            df_roster = pd.concat([df_roster, new_row]) 
+
+    roster_name = roster['rosterMaster']['name'] 
+    team_id = roster_id
+    coach_name = roster['player']['userNameToShow']
+    group_name = roster['inscriptions'][0]['tournament']['name']
+
+    df_roster['team_id'] = roster_id
+    df_roster['coach_name'] = coach_name
+    df_roster['tournament_name'] = group_name
+    df_roster['roster.name'] = roster_name
+
+    return df_roster, roster
 
 def fetch_tourplay_roster(roster_id):
     print(roster_id)
