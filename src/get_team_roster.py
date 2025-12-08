@@ -151,6 +151,15 @@ def get_tourplay_roster(roster_id):
             new_row['cnt'] = non_player[roster_element]
             df_roster = pd.concat([df_roster, new_row]) 
 
+    for i in range(len(roster['inducements'])):
+        if not roster_element == ['']:
+            new_row = df_roster.iloc[[1]].copy()
+            new_row['number'] = 99
+            new_row['position'] = roster['inducements'][i]['inducementMaster']['name']      
+            new_row['skills'] = ""
+            new_row['cnt'] = roster['inducements'][i]['quantity']
+            df_roster = pd.concat([df_roster, new_row])         
+
     roster_name = roster['rosterMaster']['name'] 
     team_id = roster_id
     coach_name = roster['player']['userNameToShow']
@@ -161,6 +170,9 @@ def get_tourplay_roster(roster_id):
     df_roster['tournament_name'] = group_name
     df_roster['roster.name'] = roster_name
 
+    # drop StarPlayer row
+    df_roster = df_roster.query("position != 'StarPlayers'")
+    df_roster = df_roster.query("cnt != 0")
     return df_roster, roster
 
 def fetch_tourplay_roster(roster_id):
